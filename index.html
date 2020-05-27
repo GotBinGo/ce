@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><style class="vjs-styles-defaults">
+      .video-js {
+        width: 300px;
+        height: 150px;
+      }
+
+      .vjs-fluid {
+        padding-top: 56.25%
+      }
+    </style>
+	<title>Sky Angel</title>
+	
+	<link rel="stylesheet" type="text/css" href="./files/style.css">
+	<script>
+
+		//TODO ripple, gombszín, 
+		var gameTimer, x=10, y=300;
+		var speed = 3;
+		var inputs=[];		
+		var plane;
+		var parachutes = [];
+		var clouds =[];
+		var birds = [];		
+		var stars = [];	
+		var paused = false;
+		var started = false;
+		var secTimer = 0;
+		var seconds = 0;
+		var gameover = false;
+		var fontSize = 40;
+		var muted = false;
+		var scaleDir = 0;
+		var scaleStar = 1;
+
+
+
+		var backgroundSound = new Audio('files/background.mp3');
+		backgroundSound.addEventListener("ended",function(){
+			this.currentTime=0;
+			this.play();
+		});
+		var finishSound = new Audio('files/finish.mp3');		
+		var hitSound = new Audio('files/hit.mp3');
+		var starSound = new Audio('files/star.mp3');
+
+		function pause(){
+			if(!gameover&&started){
+				if(paused){
+					pausecontainer.style.display="none";
+					paused = false;
+					resumeGame();				
+					pausebutton.innerText = "❚❚";
+				}
+				else{
+					pausecontainer.style.display="inline";
+					paused = true;
+					pauseGame();				
+					pausebutton.innerText = "▶";
+				}
+			}
+		}
+
+		var screenSize = {
+			x: 1024,
+			y: 768
+		};
+
+		function Plane(x, y, width, height, sprite, fuel, stars){
+			var _x = x;
+			var _y = y;
+			this.width = width;
+			this.height = height; 
+			this.sprite = sprite;
+			this.animCounter = 0;			
+			var _fuel = fuel;
+			var _stars = stars;
+			var _frame = 1;
+			Object.defineProperty(this,"y",{
+				get: function(){return _y;},
+				set: function(value){
+					_y = value;
+					this.element.style.top=_y+"px";
+				}
+			});
+
+			Object.defineProperty(this,"x",{
+				get: function(){ return _x; },
+				set: function(value){
+					_x = value;
+					this.element.style.left=_x+"px";
+				}
+			});
+
+			Object.defineProperty(this,"stars",{
+				get: function(){ return _stars; },
+				set: function(value){
+					_stars = value;
+					startext.innerText = value;
+				}
+			});
+
+			Object.defineProperty(this,"fuel",{
+				get: function(){ return _fuel; },
+				set: function(value){
+					_fuel = value;
+					fueltext.innerText = value;
+				}
+			});
+
+			Object.defineProperty(this,"frame",{
+				get: function(){ return _frame; },
+				set: function(value){
+					if(value >4) value = 1;
+					_frame = value;
+					// this.element.src="files/plane/plane"+value+".png";
+					this.element.src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+                    
+				}
+			});
+
+			var temp = document.createElement("img");			
+			temp.src=sprite;
+			temp.style.left = x +"px";
+			temp.style.top = y +"px";
+			temp.style.width = width+"px";
+			temp.style.height = height+"px";
+			temp.style.zIndex = "10";	
+			temp.style.transition="transform 0.2s"	
+			this.element = temp;
+			gamecontainer.appendChild(temp);
+		}
+
+
+		function Parachute(x, width, height, sprite){
+			this.x = x;
+			var _y = -height;
+			this.width = width;
+			this.height = height; 
+			this.sprite = sprite;
+
+			Object.defineProperty(this,"y",{
+				get: function(){ return _y; },
+				set: function(value){
+					_y = value;
+					this.element.style.top=_y+"px";
+				}
+			});			
+
+			var temp = document.createElement("img");			
+			temp.src=sprite;
+			temp.style.left = x +"px";
+			temp.style.top = _y +"px";
+			temp.style.width = width+"px";
+			temp.style.height = height+"px";
+			temp.style.zIndex = "1";		
+			temp.style.animation="paraAnim 2s alternate infinite ease-in-out";
+			this.element = temp;
+			gamecontainer.appendChild(temp);
+		}
+
+		function Star(x,y, width, height, sprite){
+			this.x = x;
+			var _y = y;
+			this.width = width;
+			this.height = height; 
+			this.sprite = sprite;
+
+			Object.defineProperty(this,"y",{
+				get: function(){ return _y; },
+				set: function(value){
+					_y = value;
+					this.element.style.top=_y+"px";
+				}
+			});			
+			var temp = document.createElement("img");			
+			temp.src=sprite;
+			temp.style.left = x +"px";
+			temp.style.top = _y +"px";
+			temp.style.width = width+"px";
+			temp.style.height = height+"px";
+			temp.style.zIndex = "1";		
+			this.element = temp;
+			gamecontainer.appendChild(temp);
+		}	
+
+		function Cloud(x, y, width, height, sprite){
+			this.y = y;
+			var _x = x;
+			this.width = width;
+			this.height = height; 
+			this.sprite = sprite;
+
+			Object.defineProperty(this,"x",{
+				get: function(){ return _x; },
+				set: function(value){
+					_x = value;
+					this.element.style.left=_x+"px";
+				}
+			});
+
+			var temp = document.createElement("img");			
+			temp.src=sprite;
+			temp.style.left = _x +"px";
+			temp.style.top = y +"px";
+			temp.style.width = width+"px";
+			temp.style.height = height+"px";
+			temp.style.zIndex = "0";					
+			this.element = temp;
+			gamecontainer.appendChild(temp);
+		}	
+
+
+		function Bird(x, y, width, height, birdNum, frame){			
+			var _x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height; 			
+			this.birdNum = birdNum;
+			this.animCounter = 0;
+			var _frame = frame;
+
+			Object.defineProperty(this,"x",{
+				get: function(){ return _x; },
+				set: function(value){
+					_x = value;
+					this.element.style.left=_x+"px";
+				}
+			});
+
+			Object.defineProperty(this,"frame",{
+				get: function(){ return _frame; },
+				set: function(value){
+					if(value >4) value = 1;
+					_frame = value;
+					// this.element.src="./files/birds/"+birdNum+"/frame-"+value+".png";
+                    this.element.src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+				}
+			});
+
+			var temp = document.createElement("img");			
+			
+			temp.style.left = _x +"px";
+			temp.style.top = y +"px";
+			temp.style.width = width+"px";
+			temp.style.height = height+"px";
+			temp.style.zIndex = "9";					
+			temp.src = "files/birds/"+birdNum+"/frame-1.png";
+			temp.style.transform="scaleX(-1)";
+			this.element = temp;
+			gamecontainer.appendChild(temp);
+		}	
+		
+		window.addEventListener("keydown",keydown);
+		window.addEventListener("keyup",keyup);
+
+		window.addEventListener("load",function(){
+			var buttons = document.getElementsByTagName("button");
+			for(var i = 0; i < buttons.length; i++){
+				buttons[i].addEventListener("mouseenter",function(e){
+					ripple(e.target);					
+				});
+			}
+
+		});
+		
+		function keydown(e){
+			var key = e.key.toLowerCase();
+			if(!inputs.includes(key)){
+				inputs.push(key);
+			}
+			if(e.key==" ")
+				pause();
+		}
+
+		function keyup(e){
+			var key = e.key.toLowerCase();
+			if(inputs.includes(key)){
+				inputs.splice(inputs.indexOf(key),1);
+			}
+			
+		}
+
+		function pauseGame(){
+			backgroundSound.pause();
+			for(var i = 0; i < parachutes.length; i++){
+				parachutes[i].element.style.animationPlayState="paused";
+			}			
+			window.clearInterval(gameTimer);
+			window.clearInterval(secTimer);
+		}
+
+
+		function resumeGame(){
+			backgroundSound.play();
+			for(var i = 0; i < parachutes.length; i++){
+				parachutes[i].element.style.animationPlayState="running";
+			}	
+			
+			gameTimer=window.setInterval(function(){
+				gameStep();
+			},1000/60);
+			secTimer = window.setInterval(function(){
+				seconds++;
+				timetext.innerText=Math.floor(seconds/60)+":"+seconds%60;
+				plane.fuel--;				
+				if(plane.fuel==0){
+					finishSound.play();
+					gameOver();
+				}
+			},1000);
+		}
+
+		function startGame(){
+			document.getElementById("startcontainer").style.display="none";
+			document.getElementById("gamecontainer").style.display="block";			
+			pausebutton.style.display="inline";
+			initClouds();	
+			started = true;
+			createParachute();
+			createStar();
+			resumeGame();
+			plane = new Plane(10, 300, 75, 35, "files/plane/plane1.png", 10,0);
+
+			for(var i = 0; i < 15; i++){
+				createBird(Math.random()*screenSize.x+screenSize.x, Math.random()*screenSize.y);
+			}
+		}
+
+		function createCloud(x){
+			var randCloudNum = Math.floor(Math.random()*6)+1;
+			clouds.push(new Cloud(x,Math.floor(Math.random()*screenSize.y-50),150,75,"files/clouds/cloud"+randCloudNum+".png"));
+		}
+
+		function initClouds(){
+			createCloud(0);
+			createCloud(220);
+			createCloud(440);
+			createCloud(660);
+			createCloud(880);
+		}
+
+		function cloudsStep(){			
+			for(var i = 0; i < clouds.length; i++){				
+				if(clouds[i].x < -clouds[i].width){
+					gamecontainer.removeChild(clouds[i].element);
+					clouds.splice(i,1);
+					createCloud(screenSize.x);
+				}
+				else 
+					clouds[i].x--;
+			}
+		}
+
+		function gameOver(){
+			pauseGame();
+			gameover = true;			
+			gameovercontainer.style.display="inline";
+			pausebutton.style.display="none";
+		}
+
+		function gameStep(){
+			movePlane();
+			cloudsStep();
+			parachutesStep();	
+			starsStep();
+			birdsStep();
+
+			for(var i = 0; i < birds.length; i++){
+				if(collide(birds[i],plane)){
+					gameOver();
+					hitSound.play();
+				}
+			}	
+
+			for(var i = 0; i < parachutes.length; i++){
+				if(collide(parachutes[i],plane)){
+					gamecontainer.removeChild(parachutes[i].element);
+					parachutes.splice(i,1);
+					plane.fuel+=10;					
+					createParachute();
+				}
+			}
+
+			for(var i = 0; i < stars.length; i++){
+				if(collide(stars[i],plane)){
+					plane.stars++;
+					starSound.play();
+					gamecontainer.removeChild(stars[i].element);
+					stars.splice(i,1);
+					createStar();
+				}
+			}
+		}
+
+		function movePlane(){			
+			var tilt = 0;
+			if((inputs.includes("arrowup")||inputs.includes("w"))&&plane.y>0){
+				plane.y-=speed;				
+				tilt--;
+			}
+
+			if((inputs.includes("arrowdown")||inputs.includes("s"))&&plane.y<screenSize.y - plane.height){
+				plane.y+=speed;
+				tilt++;
+			}
+
+			if((inputs.includes("arrowright")||inputs.includes("d"))&&plane.x<screenSize.x - plane.width)
+				plane.x+=speed;			
+
+			if((inputs.includes("arrowleft")||inputs.includes("a"))&&plane.x>0)
+				plane.x-=speed;
+			
+			plane.animCounter++;
+			if(plane.animCounter==5){
+				plane.animCounter=0;
+				plane.frame++;
+			}
+
+			if(tilt==0)
+				plane.element.style.transform="rotate(0deg)";
+			else if(tilt == 1)
+				plane.element.style.transform="rotate(15deg)";
+			else
+				plane.element.style.transform="rotate(-15deg)";
+			
+		}
+
+		function createParachute(){
+			parachutes.push(new Parachute(Math.floor(Math.random()*screenSize.x*0.8), 50, 60,"files/parachute.png"));			
+		}
+
+		function createStar(){
+			stars.push(new Star(Math.floor(Math.random()*screenSize.x*0.8),-50, 40, 40,"files/star.png"));			
+		}
+
+		function parachutesStep(){			
+			for(var i = 0; i < parachutes.length; i++){				
+				if(parachutes[i].y > screenSize.y){
+					gamecontainer.removeChild(parachutes[i].element);
+					parachutes.splice(i,1);
+					createParachute();
+				}
+				else 
+					parachutes[i].y++;
+			}
+		}
+
+		function starsStep(){
+			if(scaleDir==0){
+				scaleStar-=0.05;
+			}
+			else{
+				scaleStar+=0.05;
+			}
+			if(scaleStar<-1)
+				scaleDir=1;
+			if(scaleStar>1)
+				scaleDir=0;
+
+
+			for(var i = 0; i < stars.length; i++){				
+				stars[i].element.style.transform="scaleX("+scaleStar+")";
+				if(stars[i].y > screenSize.y){
+					gamecontainer.removeChild(stars[i].element);
+					stars.splice(i,1);
+					createStar();
+				}
+				else 
+					stars[i].y++;
+			}
+		}
+
+		function createBird(x,y){
+			birds.push(new Bird(x, y, 50, 50, Math.floor(Math.random()*4)+1,1));
+		}
+
+		function birdsStep(){
+			for(var i = birds.length-1; i >=0 ; i--){
+				birds[i].x-=2;
+				birds[i].animCounter+=Math.floor(Math.random()*2)+1;
+				if(birds[i].animCounter>10){
+					birds[i].frame++;
+					birds[i].animCounter=0;
+				}
+				if(birds[i].x<-birds[i].width){
+					gamecontainer.removeChild(birds[i].element);
+					birds.splice(i,1);
+					createBird(screenSize.x,Math.floor(Math.random()*screenSize.y));
+				}
+			}
+		}
+
+		function collide(o1, o2){
+			return o1.x < o2.x + o2.width && o1.x + o1.width > o2.x && o1.y < o2.y + o2.height && o1.y + o1.height > o2.y;			 
+		}
+
+		function restart(){
+			location.reload();
+		}
+
+		function increaseFontSize(){			
+			fontSize+=5;
+			if(fontSize>85) fontSize = 85;
+			setFont(fontSize);
+		}
+
+		function decreaseFontSize(){
+			fontSize-=5;
+			if(fontSize<30) fontSize = 30;			
+			setFont(fontSize);
+		}
+
+		function setFont(size){
+			var texts = document.getElementsByClassName("gametext");
+			for(var i = 0; i < texts.length; i++){
+				texts[i].style.fontSize = size+"px";
+			}
+
+		}
+
+		function toggleMute(){
+			if(muted){
+				muted = false;				
+				backgroundSound.muted = false;
+				finishSound.muted = false;
+				hitSound.muted = false;
+				starSound.muted = false;
+				mutebutton.innerText = "🔊";
+			}
+			else{
+				muted = true;
+				backgroundSound.muted = true;
+				finishSound.muted = true;
+				hitSound.muted = true;
+				starSound.muted = true;
+				mutebutton.innerText = "🔇";
+			}
+		}
+
+		function ripple(element){		
+			incRipple(element,0);
+		}
+
+		function incRipple(element, szam){
+			element.style.background="linear-gradient(to right,#d4880f "+(45-szam)+"%, #f39c12 "+(50-szam)+"%, #f39c12 "+(50+szam)+"%,#d4880f "+(55+szam)+"%)";
+			if(szam<50)
+				window.setTimeout(function(){incRipple(element, szam+2)},10);
+		}
+
+	</script>		
+			
+</head>
+<body>
+<div id="gamearea">
+	<div class="container">
+		<div id="startcontainer" class="container">
+			<div id="starttext">
+					<div class="title">How to Play</div> <br>
+					<div class="normaltext">
+                        Move using the arrows keys<br>
+                        Collect fuel and accumulate points
+					</div><br>				
+				<button class="button" id="startbutton" onclick="startGame()">
+					Start
+				</button>
+			</div>
+		</div>
+
+	<div id="gamecontainer" class="container">
+		<div class="container"><!--UI-->
+			<img src="./files/star2.png" width="100" alt="" style="left:-10px; top:-10px" class="ui"></div>
+			<img src="./files/fuel.png" width="60" alt="" style="bottom:10px; left:10px" class="ui">	
+			<img src="./files/clock.png" width="80" alt="" style="bottom:5px; left:400px" class="ui">
+			<div id="startext" class="gametext ui">0</div>
+			<div id="fueltext" class="gametext ui">10</div>
+			<div id="timetext" class="gametext ui">0:0</div>
+			<button class="fontbutton" style="right:10px; top:10px" onclick="increaseFontSize()">+</button>
+			<button class="fontbutton" style="right:10px; top:80px" onclick="decreaseFontSize()">-</button>
+			<button id="mutebutton" class="fontbutton" style="right:10px; top:150px" onclick="toggleMute()">🔊</button>
+			
+		</div>
+		<div id="pausecontainer">						
+			<div class="pausetext"><br><br><br>Game Paused</div>			
+		</div>
+		<button id="pausebutton" class="button" onclick="pause()">❚❚</button>		
+		<div id="gameovercontainer">
+			<div class="pausetext"><br><br><br>Game Over</div><br>
+			<button class="button" onclick="restart()">Play again</button>
+		</div>
+	</div>		
+</div>
+
+</body></html>

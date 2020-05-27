@@ -1,0 +1,153 @@
+html, body{
+	margin:0px;	
+	height: 100%;
+	
+}
+
+body *{
+	font-family: "Impact";
+}
+
+body{
+	display: flex;
+}
+
+#gamearea{
+	width:1024px;	
+	height:768px;
+	margin:auto;
+	border:1px solid black;
+	overflow: hidden;
+}
+
+.container{
+	position:relative;
+	width: 100%;
+	height:100%;
+}
+.container > * {
+	position:absolute;
+}
+
+#starttext{	
+	width:100%;
+	height:100%;
+	text-align:center;
+	margin:auto;
+	left:0;
+	right:0;
+	line-height: 35px;
+}
+
+.title{
+	font-size:60px;	
+	text-decoration: underline;
+	position: absolute;
+    left: 370px;
+    top: 40px;
+    animation:slideinleft 1s;
+}
+
+.normaltext{	
+	width:80%;	
+	position:absolute;
+	top:150px;
+	left:100px;
+	font-size:35px;	
+	color: black;	
+	animation:slideinright 1s;
+}
+
+.button{
+	font-size:40px;
+	border-radius: 10px;
+	padding:10px;
+	padding-left:20px;
+	padding-right:20px;	
+}
+
+.fontbutton{
+	font-size:35px;
+	border-radius: 10px;	
+	width:60px;
+	height:60px;
+	z-index:15;
+}
+
+.button, .fontbutton{
+	background-color:#d4880f;
+}
+
+#startcontainer{
+	background:url("background.png");
+	background-size: 1024px;	
+}
+
+#gamecontainer{
+	display:none; 
+	background:#7ab7b7;
+}
+
+#pausebutton{	
+	bottom:10px;	
+	right:10px;
+	z-index: 100;
+	display:none;	
+}
+
+#pausecontainer, #gameovercontainer{
+	text-align: center;			
+	width:100%;
+	display:none;
+	z-index: 100;
+}
+
+.pausetext{
+	font-size:70px;
+	width:100%;
+	z-index:11;
+}
+
+.gametext{
+	font-size:40px;
+}
+
+#fueltext {
+	left:80px;
+	bottom:10px;	
+}
+
+#startext{
+	left:100px;
+	top:15px;	
+}
+
+#timetext{
+	left:500px;
+	bottom:20px;	
+}
+
+.ui{
+	z-index:100;
+}
+
+#startbutton{
+	position:absolute;
+	bottom:50px;
+	left:450px;
+}
+
+@keyframes paraAnim{
+	0%{transform:rotate(15deg);}
+	100%{transform:rotate(-15deg);}
+}
+
+@keyframes slideinright{
+	0%{left:1024px;}
+	100%{left:100px;}
+}
+
+@keyframes slideinleft{
+	0%{left:-300px;}
+	100%{left:370px;}
+}
