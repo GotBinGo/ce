@@ -13,8 +13,8 @@ body{
 }
 
 #gamearea{
-	width:1024px;	
-	height:768px;
+	width:800px;	
+	height:600px;
 	margin:auto;
 	border:1px solid black;
 	overflow: hidden;
@@ -43,16 +43,25 @@ body{
 	font-size:60px;	
 	text-decoration: underline;
 	position: absolute;
-    left: 370px;
+    left: 275px;
     top: 40px;
     animation:slideinleft 1s;
 }
 
 .normaltext{	
-	width:80%;	
+	width:100%;	
 	position:absolute;
 	top:150px;
-	left:100px;
+	left:0px;
+	font-size:35px;	
+	color: black;	
+	animation:slideinright 1s;
+}
+.scoretext{	
+	width:100%;	
+	position:absolute;
+	top:250px;
+	left:0px;
 	font-size:35px;	
 	color: black;	
 	animation:slideinright 1s;
@@ -123,7 +132,7 @@ body{
 }
 
 #timetext{
-	left:500px;
+	left:420px;
 	bottom:20px;	
 }
 
@@ -134,7 +143,7 @@ body{
 #startbutton{
 	position:absolute;
 	bottom:50px;
-	left:450px;
+	left:340px;
 }
 
 @keyframes paraAnim{
@@ -144,10 +153,10 @@ body{
 
 @keyframes slideinright{
 	0%{left:1024px;}
-	100%{left:100px;}
+	100%{left:0px;}
 }
 
 @keyframes slideinleft{
 	0%{left:-300px;}
-	100%{left:370px;}
+	100%{left:275px;}
 }
